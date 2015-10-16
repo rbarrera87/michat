@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Chat</title>
+</head>
+<body>
+  <form action="">
+    <label for="txtMessage">Message</label>
+    <br \>
+    <textarea name="txtMessage" id="txtMessage" cols="30" rows="10" required></textarea>
+    <br \>
+    <input type="submit">
+  </form>
+
+  <button id="clickme">Destroy Messages</button>
+
+  <ul id="messageList"></ul>
+
+  <script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+  <script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+  <script>
+    var socket = io.connect("http://localhost:3000");
+    socket.on("newMessage", function(data){
+      console.log(data);
+    });
+
+    socket.on("savedMessage", function(data){
+      console.log(data);
+      $("#messageList").append("<li>" + data.message + "</li>");
+    });
+
+    //load Messages
+    socket.emit("loadMessages", {});
+
+    //print messages
+    socket.on("loadMessages", function(data){
+      console.log(data);
+      for (var i = data.messages.length - 1; i >= 0; i--) {
+        $("#messageList").append("<li>" + data.messages[i].text + "</li>");
+      };
+    });
+
+    //Clean messages ul
+    socket.on("destroyMessages", function(){
+      $("#messageList").html("");
+    });
+
+    $("#clickme").click(function(){
+      socket.emit("destroyMessages", {});
+    });
+
+    $("form").submit(function(e){
+      e.preventDefault();
+      socket.emit("newClientMessage", { message: $("#txtMessage").val() });
+      $("#txtMessage").val("");
+      $("#txtMessage").focus();
+    });
+  </script>
+</body>
+</html>
